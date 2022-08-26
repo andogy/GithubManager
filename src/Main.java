@@ -1,12 +1,6 @@
 import javax.swing.*;
 import java.awt.*;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.util.Objects;
 
 public class Main {
     public static boolean loginStat = false;
@@ -14,20 +8,23 @@ public class Main {
     public static String userPAT;
 
     public static void main(String[] args) {
+
         JFrame window = new JFrame("Github Manager");
         window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         window.setSize(850, 480);
         window.setLayout(new GridLayout());
 
-//        JLabel isLogin = new JLabel("Github Status: " + loginStat);
-//        window.add(isLogin);
+        JTextField name = new JTextField();
+        name.addActionListener(e -> userName = name.getText());
+        window.add(name);
 
-//        JLabel profile = new JLabel(Objects.requireNonNull(API.getUserProfile("andogy")).getString("login"));
-//        profile.setSize(200, 0);
-//        profile.setVerticalAlignment(JLabel.TOP);
-//        window.add(profile);
+        JTextField PAT = new JTextField();
+        PAT.addActionListener(e -> userPAT = PAT.getText());
+        window.add(PAT);
 
-
+        JButton submit = new JButton("Submit");
+        submit.addActionListener(e -> System.out.println(API.getUserProfile("andogy")));
+        window.add(submit);
 
         window.setLocationRelativeTo(null);
         window.setVisible(true);

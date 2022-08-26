@@ -1,11 +1,42 @@
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import javax.net.ssl.HttpsURLConnection;
+import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLEncoder;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 public class API {
+    public static String getOAuthKey(String code){
+        StringBuilder response = new StringBuilder();
+        try {
+            String url = "https://github.com/login/oauth/access_token";
+            URL obj = new URL(url);
+            HttpsURLConnection con = (HttpsURLConnection) obj.openConnection();
+
+            con.setRequestMethod("POST");
+
+            String urlParameters = "code="+code+"&client_id="+Main.CLIENT_ID+"&client_secret=3970928b9355934e7192bc314fd6fbaaedceb967";
+
+            con.setDoOutput(true);
+            DataOutputStream wr = new DataOutputStream(con.getOutputStream());
+            wr.writeBytes(urlParameters);
+            wr.flush();
+            wr.close();
+
+            BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+            String inputLine;
+            while ((inputLine = in.readLine()) != null) {
+                response.append(inputLine);
+            }
+            in.close();
+        } catch (IOException e){
+            e.printStackTrace();
+        }
+        return response.toString();
+    }
     private static String request(String url){
         Process process;
         StringBuilder processResult = new StringBuilder();
@@ -40,5 +71,13 @@ public class API {
         JSONObject data = new JSONObject(request("https://api.github.com/users/" + userName));
         data.put("massage", "YES DADDY");
         return !data.getString("massage").equals("Not Found");
+    }
+
+    public static JSONObject searchUsers(String q){
+        return new JSONObject(request("https://api.github.com/search/users?q="+q));
+    }
+
+    public static JSONObject searchRepositories(String q){
+        return new JSONObject(request("https://api.github.com/search/repositories?q="+q));
     }
 }

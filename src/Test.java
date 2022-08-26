@@ -1,5 +1,8 @@
+import javax.swing.*;
+
 public class Test {
-    public static void test(){
-        // Test code here, delete if you want.
+    // This is *NOT THE* main method, find the main method in Main
+    public static void main(String[] args) {
+        System.out.println(API.getOAuthKey("386251acc0355cdfdd19"));
     }
 }

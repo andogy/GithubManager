@@ -37,8 +37,18 @@ public class HttpHandler implements com.sun.net.httpserver.HttpHandler {
         os.flush();
         os.close();
 
-        Main.loginDialog.hideDialog();
-        System.out.println(getRequest(exchange));
-        System.out.println(API.getOAuthKey(getRequest(exchange).get("code")));
+        if (exchange.getRequestURI().toString().split("\\?")[0].equals("/callback")) {
+            Main.webBrowser.destroyDialog();
+            API.OAuthKey = API.getOAuthKey(getRequest(exchange).get("code")).split("=")[1].split("&")[0];
+            Main.loginState.setText("State: Loading...");
+            new Thread(() -> {
+                API.refreshLoginState();
+                if (API.loginState) {
+                    Main.loginState.setText("State: Login success");
+                } else {
+                    Main.loginState.setText("State: Login needed / Login outdated");
+                }
+            }).start();
+        }
     }
 }

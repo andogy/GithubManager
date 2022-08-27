@@ -5,19 +5,33 @@ import javafx.scene.web.WebView;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 public class WebBrowser extends JFrame{
+    WebBrowser(String title, String text, Component relativeTo){
+        addQuitDialog(title, text, relativeTo);
+    }
+    WebBrowser(String title, String text){
+        addQuitDialog(title, text, null);
+    }
+
     WebBrowser(){
+        addQuitDialog("Quit?", "Are you sure to quit?", null);
+    }
+
+    void addQuitDialog(String title, String text, Component relativeTo){
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent we) {
                 JDialog exitingDialog = new JDialog();
                 exitingDialog.setSize(240,170);
-                exitingDialog.setTitle("Cancel login?");
+                exitingDialog.setTitle(title);
                 exitingDialog.setLayout(null);
 
-                JLabel label = new JLabel("Are you sure to cancel the login?");
+                JLabel label = new JLabel(text);
                 label.setSize(240 , 20);
                 label.setVisible(true);
                 exitingDialog.add(label);
@@ -37,7 +51,7 @@ public class WebBrowser extends JFrame{
                 exitingDialog.add(exitButton);
                 exitButton.setVisible(true);
 
-                exitingDialog.setLocationRelativeTo(null);
+                exitingDialog.setLocationRelativeTo(relativeTo);
                 exitingDialog.setVisible(true);
             }
         });
@@ -75,8 +89,12 @@ public class WebBrowser extends JFrame{
     }
 
     void hideDialog(){
-        setVisible(false);
         removeAll();
+        setVisible(false);
         repaint();
+    }
+
+    boolean isOpening(){
+        return isVisible();
     }
 }

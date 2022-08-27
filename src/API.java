@@ -1,14 +1,17 @@
 import org.json.JSONObject;
 
 import javax.net.ssl.HttpsURLConnection;
-import java.io.*;
-import java.net.HttpURLConnection;
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.URL;
-import java.net.URLEncoder;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 
 public class API {
+    public static String OAuthKey = "";
+    public static boolean loginState = false;
+
     public static String getOAuthKey(String code){
         StringBuilder response = new StringBuilder();
         try {
@@ -35,13 +38,14 @@ public class API {
         } catch (IOException e){
             e.printStackTrace();
         }
+
         return response.toString();
     }
     private static String request(String url){
         Process process;
         StringBuilder processResult = new StringBuilder();
         try {
-            process = Runtime.getRuntime().exec("curl  -u '" + Main.userName + ":" + Main.userPAT + "' " + url);
+            process = Runtime.getRuntime().exec("curl -H 'Authorization: token " + OAuthKey + "' "  + url);
 
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream(), Charset.forName("GBK")));
             String line;
@@ -69,8 +73,10 @@ public class API {
 
     public static boolean isUserExist(String userName){
         JSONObject data = new JSONObject(request("https://api.github.com/users/" + userName));
-        data.put("massage", "YES DADDY");
-        return !data.getString("massage").equals("Not Found");
+        if (!data.has("message") || data.isNull("message")) {
+            data.put("message", "YES DADDY");
+        }
+        return !data.getString("message").equals("Not Found");
     }
 
     public static JSONObject searchUsers(String q){
@@ -79,5 +85,13 @@ public class API {
 
     public static JSONObject searchRepositories(String q){
         return new JSONObject(request("https://api.github.com/search/repositories?q="+q));
+    }
+
+    public static void refreshLoginState(){
+        JSONObject data = new JSONObject(request("https://api.github.com/user"));
+        if (!data.has("message") || data.isNull("message")) {
+            data.put("message", "YES DADDY");
+        }
+        loginState = !data.getString("message").equals("Requires authentication");
     }
 }

@@ -8,6 +8,10 @@ import java.net.InetSocketAddress;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
+/**
+ * @Version Pre-Release-0.0.1
+ */
+
 public class Main {
     public static WebBrowser webBrowser = new WebBrowser();
     public static JLabel loginState;

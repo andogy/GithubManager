@@ -14,7 +14,11 @@ import java.util.concurrent.ThreadPoolExecutor;
 
 public class Main {
     public static WebBrowser webBrowser = new WebBrowser();
-    public static JLabel loginState;
+    public static JLabel loginStateLabel;
+    public static JButton login;
+    public static boolean isLoadingLoginState;
+    public static boolean loginState;
+    public static String userName;
 
     public static final String CLIENT_ID = "1f6fd4e559ecc4fd554b";
 
@@ -25,44 +29,33 @@ public class Main {
         window.setSize(425, 240);
         window.setLayout(null);
 
-        JButton login = new JButton("Login");
+        login = new JButton("...");
         login.setFocusPainted(false);
         login.setVisible(true);
         login.setSize(70, 23);
         login.addActionListener(e -> {
-            if (!webBrowser.isOpening()) {
+            if (!webBrowser.isOpening() && !loginState) {
                 githubLoginHandler();
+            }
+            if (loginState && !isLoadingLoginState){
+                githubLogoutHandler();
             }
         });
         window.add(login);
 
-        loginState = new JLabel("State: Loading...");
-        loginState.setBounds(login.getX()+75, 0, 220, 23);
-        loginState.setVisible(true);
-        new Thread(() -> {
-            API.refreshLoginState();
-            if (API.loginState) {
-                loginState.setText("State: Login success");
-            } else {
-                loginState.setText("State: Login needed / OAuth outdated");
-            }
-        }).start();
-        loginState.addMouseListener(new MouseAdapter() {
+        loginStateLabel = new JLabel("State: Loading...");
+        loginStateLabel.setBounds(login.getX()+75, 0, 220, 23);
+        loginStateLabel.setVisible(true);
+        refreshLoginStateHandler();
+        loginStateLabel.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                loginState.setText("State: Loading...");
-                new Thread(() -> {
-                    API.refreshLoginState();
-                    if (API.loginState) {
-                        loginState.setText("State: Login success");
-                    } else {
-                        loginState.setText("State: Login needed / Login outdated");
-                    }
-                }).start();
+                refreshLoginStateHandler();
             }
         });
-        window.add(loginState);
+        window.add(loginStateLabel);
 
+        mainLoop();
         window.setLocationRelativeTo(null);
         window.setVisible(true);
     }
@@ -70,20 +63,53 @@ public class Main {
     private static void githubLoginHandler(){
         webBrowser = new WebBrowser("Cancel login?", "Are you sure to cancel the login?");
 
-        ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(10);
-
-        HttpServer server;
-        try {
-            server = HttpServer.create(new InetSocketAddress("localhost", 9746), 0);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        if (Utils.isPortAvailable(9746)) {
+            ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(10);
+            HttpServer server;
+            try {
+                server = HttpServer.create(new InetSocketAddress("localhost", 9746), 0);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            server.createContext("/", new HttpHandler());
+            server.setExecutor(threadPoolExecutor);
+            server.start();
         }
-        server.createContext("/", new HttpHandler());
-        server.setExecutor(threadPoolExecutor);
-        server.start();
 
         String scopes = "repo,admin:repo_hook,gist,project,write:packages,delete_repo,admin:org,admin:public_key,admin:org_hook,notifications,workflow,codespace,admin:gpg_key,delete:packages,read:packages";
 
         webBrowser.WebDialog("https://github.com/login/oauth/authorize?scope=" + scopes + "&allow_signup=false&client_id="+CLIENT_ID);
+    }
+
+    private static void githubLogoutHandler(){
+        System.out.println("Oh no! I don't know how to logout, cry face cry face :(");
+    }
+
+    public static void refreshLoginStateHandler(){
+        if (!isLoadingLoginState) {
+            isLoadingLoginState = true;
+            loginStateLabel.setText("State: Loading...");
+            new Thread(() -> {
+                API.refreshLoginState();
+                if (API.loginState) {
+                    loginState = true;
+                    loginStateLabel.setText("State: Login success");
+                    login.setText("Logout");
+                } else {
+                    loginStateLabel.setText("State: Login needed / Login outdated");
+                    login.setText("Login");
+                    loginState = false;
+                }
+                isLoadingLoginState = false;
+            }).start();
+        }
+    }
+
+    private static void mainLoop() {
+        new Thread(() -> {
+            while (true){
+                Utils.setButtonClickable(login, loginState || !isLoadingLoginState);
+            }
+        }).start();
     }
 }
